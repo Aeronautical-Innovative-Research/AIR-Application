@@ -1,6 +1,24 @@
 import telnetlib
 import time
 
+# ============================
+#
+# Commands:
+#   calz: CALZ [period] [average] [delay] || CALZ 500 32
+#   list cal vars: LIST C
+#   
+#   scan: SCAN
+#   set var: SET <name> <value> || SET FPS 5
+#   list scan vars: LIST S
+#   
+#   stop: STOP   
+#   status: STATUS || returns READY|CALZ|SAVE
+#   
+# SCAN Variables
+#   AVG (1-240|16) - int : average
+#   FPS (0-2147483648|100) - long int : frames per scan
+#   PERIOD (125-65535|500) - int : period == Data Rate = 1/(PERIOD * 16 * AVG)
+
 class DSA:
     
     def __init__(self, host, port=23, timeout=5):
@@ -25,7 +43,7 @@ class DSA:
             print('Connection closed.')
             
     # Send DSA commands
-    def send_command(self, command, end_marker, returnBit=False):
+    def send_command(self, command, end_marker = None, returnBit=False):
         
         if not self.tn:
             print(f'Command <{command}> sent. No connection found')
@@ -83,11 +101,11 @@ class DSA:
         return self.send_command('CALZ')
     
     # Execute DSA Scan
-    def scan(self, filename = 'OUTPUT'):
+    def scan(self, fps = 1000, freq = 125, avg = 10, filename = 'OUTPUT'):
         
-        FPS = 1000 # frames per scan
-        freq = 125 # [Hz]
-        AVG = 10   # frames to average per outputted frame
+        FPS = fps # frames per scan
+        freq = freq # [Hz]
+        AVG = avg   # frames to average per outputted frame
         
         PERIOD = max(50, 1e6/16/AVG/freq)
         
