@@ -126,7 +126,7 @@ class DSA:
         
         start = time.time()
             
-        while time.time() - start < 10:
+        while time.time() - start < 60:
             
             try:
                 raw_bytes = self.tn.read_very_eager()
