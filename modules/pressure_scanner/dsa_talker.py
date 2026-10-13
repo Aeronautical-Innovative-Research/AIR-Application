@@ -122,6 +122,7 @@ class DSA:
         print(f'Starting scan for {fps} frames...')
         
         # send SCAN command
+        assert self.tn is not None, "Telnet Object not constructed"
         self.tn.write(b'SCAN\r\n')
         
         start = time.time()
@@ -132,7 +133,7 @@ class DSA:
                 raw_bytes = self.tn.read_very_eager()
                 
             except EOFError:
-                self.clsoe()
+                self.close()
                 raise
             
             if raw_bytes:
