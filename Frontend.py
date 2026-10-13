@@ -146,9 +146,24 @@ class Window(QWidget):
             "Closed Connection Successfully"
         )
 
+    
+    
     def OpenConfigWindow(self):
-        configWindow = ConfigWindow()
-        configWindow.show()
+        self.configWindow = ConfigWindow(self)
+        self.configWindow.settingsApplied.connect(
+            self.ApplyConfigSettings
+        )
+        self.configWindow.show()
+        self.configWindow.raise_()
+        self.configWindow.activateWindow()
+
+
+
+    def ApplyConfigSettings(self, settings):
+        print("Applied DSA settings:")
+        for name, value in settings.items():
+            print(f"{name}: {value}")
+
 
     def closeEvent(self, event):
         self.Close()
