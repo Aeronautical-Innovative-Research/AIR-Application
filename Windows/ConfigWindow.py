@@ -58,13 +58,6 @@ class ConfigWindow(QWidget):
         main_layout.setContentsMargins(25, 20, 25, 20)
         main_layout.setSpacing(20)
 
-        panel_layout.setContentsMargins(25, 20, 25, 20)
-        panel_layout.setHorizontalSpacing(30)
-        panel_layout.setVerticalSpacing(15)
-
-        timing_group.setMinimumWidth(340)
-        main_layout.addWidget(settings_panel, 1)
-
         # Heading
         heading = QLabel("DSA Scan Configuration")
         heading.setStyleSheet("""
@@ -96,9 +89,9 @@ class ConfigWindow(QWidget):
         """)
 
         panel_layout = QGridLayout(settings_panel)
-        panel_layout.setContentsMargins(15, 12, 15, 12)
-        panel_layout.setHorizontalSpacing(20)
-        panel_layout.setVerticalSpacing(10)
+        panel_layout.setContentsMargins(25, 20, 25, 20)
+        panel_layout.setHorizontalSpacing(30)
+        panel_layout.setVerticalSpacing(15)
 
         # ---------------------------------
         # LEFT SIDE: Timing configuration
@@ -113,6 +106,9 @@ class ConfigWindow(QWidget):
             }
         """)
         timing_group.setObjectName("timingPanel")
+
+        timing_group.setMinimumWidth(340)
+        main_layout.addWidget(settings_panel, 1)
 
         timing_layout = QVBoxLayout(timing_group)
         timing_layout.setContentsMargins(0, 0, 0, 0)
@@ -173,6 +169,41 @@ class ConfigWindow(QWidget):
         scan_layout = QFormLayout()
         scan_layout.setSpacing(9)
         scan_layout.setLabelAlignment(Qt.AlignLeft)
+
+        # Period
+        self.period_input = QSpinBox()
+        self.period_input.setRange(1, 100000000)
+        self.period_input.setValue(250)
+
+        period_row = QHBoxLayout()
+        period_row.addWidget(self.period_input)
+        period_row.addWidget(QLabel("microseconds"))
+
+        scan_layout.addRow(QLabel("Period"), period_row)
+
+        # Average
+        self.average_input = QSpinBox()
+        self.average_input.setRange(1, 1000000)
+        self.average_input.setValue(10)
+        scan_layout.addRow(QLabel("Average"), self.average_input)
+
+        # Rate
+        self.rate_display = QLabel("25")
+        self.rate_display.setStyleSheet("""
+            QLabel {
+                background-color: #EEEEEE;
+                border: 1px solid #AAAAAA;
+                padding: 5px;
+                font-weight: normal;
+            }
+        """)
+        scan_layout.addRow(QLabel("Rate (Hz)"), self.rate_display)
+
+        # Formula
+        formula_label = QLabel("Rate = 1/(Period*16*Average)")
+        formula_label.setWordWrap(True)
+        formula_label.setStyleSheet("font-size: 11px; font-weight: normal;")
+        scan_layout.addRow(QLabel(""), formula_label)
 
         # Frames per scan
         self.frames_input = QSpinBox()
@@ -251,11 +282,8 @@ class ConfigWindow(QWidget):
         )
 
         # Add the two columns to the settings panel.
-        panel_layout.addWidget(timing_group, 0, 0)
-        panel_layout.addLayout(scan_layout, 0, 1)
-
+        panel_layout.addLayout(scan_layout, 0, 0)
         panel_layout.setColumnStretch(0, 1)
-        panel_layout.setColumnStretch(1, 2)
 
         main_layout.addWidget(settings_panel)
 

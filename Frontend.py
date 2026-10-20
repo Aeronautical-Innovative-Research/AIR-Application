@@ -113,11 +113,13 @@ class Window(QWidget):
 
     def Connect(self):
         self.dsa.connect()
+        self.connected = True
         QMessageBox.information(
             self,
             "Connection",
             "Connection Successful"
         )
+        
 
     def Calibrate(self):
         self.dsa.calz()
@@ -140,11 +142,13 @@ class Window(QWidget):
 
     def Close(self):
         self.dsa.close()
+        self.connected = False
         QMessageBox.information(
             self,
             "Connection",
             "Closed Connection Successfully"
         )
+        
 
     
     
@@ -160,9 +164,8 @@ class Window(QWidget):
 
 
     def ApplyConfigSettings(self, settings):
-        print("Applied DSA settings:")
         for name, value in settings.items():
-            print(f"{name}: {value}")
+            self.dsa.set_variable(name, value)
 
 
     def closeEvent(self, event):
