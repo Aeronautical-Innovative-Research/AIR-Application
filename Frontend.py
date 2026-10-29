@@ -168,7 +168,7 @@ class Window(QWidget):
             self.dsa.set_variable(name, value)
 
 
-    def closeEvent(self, event):
+    def closeEvent(self, event): #type: ignore
         self.Close()
         event.accept()
 
