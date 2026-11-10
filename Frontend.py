@@ -7,13 +7,18 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QMessageBox,
     QHBoxLayout,
-    QVBoxLayout
+    QVBoxLayout,
 )
+
+# graphing
+import matplotlib.pyplot as plt
+import pandas as pd
 
 import qdarktheme
 
 # Windows
 from Windows.ConfigWindow import ConfigWindow
+from Windows.PressureScannerGraphWindow import PressureScannerGraphWindow
 
 # Backend
 from modules.pressure_scanner.dsa_talker import DSA
@@ -111,6 +116,11 @@ class Window(QWidget):
     # Button Functions
     # -------------------------
 
+    def StartGraph(self):
+        self.pressureScannerGraph = PressureScannerGraphWindow(self)
+        self.pressureScannerGraph.place_beside_parent()
+        self.pressureScannerGraph.show()
+
     def Connect(self):
         self.dsa.connect()
         self.connected = True
@@ -131,7 +141,7 @@ class Window(QWidget):
 
     def Scan(self):
         self.dsa.scan()
-        # TODO
+        self.StartGraph()
 
     def Status(self):
         QMessageBox.information(

@@ -34,6 +34,7 @@ class ConfigWindow(QWidget):
 
         self.setup_ui()
         self.update_rate()
+        self.update_frames_per_scan()
 
         # Center over the AIR application.
         if parent is not None:
@@ -369,14 +370,19 @@ class ConfigWindow(QWidget):
         """)
 
 
-    def update_rate(self, *args):
+    def update_rate(self):
         period = self.period_input.value()
         average = self.average_input.value()
 
         # Period is expressed in microseconds.
-        rate = 1_000_000 / (period * 16 * average)
+        self.rate = 1_000_000 / (period * 16 * average)
 
-        self.rate_display.setText(f"{rate:g}")
+        self.rate_display.setText(f"{self.rate:g}")
+
+    def update_frames_per_scan(self):
+        scan_duration = self.scan_duration_input.value()
+        self.frames_per_second = scan_duration * self.rate
+        self.frames_per_second_display.setText(f"{self.frames_per_second:g}")
 
     def get_settings(self):
         """Return the current configuration as a dictionary."""
