@@ -1,4 +1,4 @@
-import telnetlib
+from telnetlib3 import telnetlib
 import time
 import numpy as np
 

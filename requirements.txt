@@ -1,5 +1,6 @@
 PyQt5
-pyqtdarktheme
+pyqtdarktheme-fork==2.3.6
+telnetlib3>=4,<5
 numpy
 matplotlib
 pandas
