@@ -26,8 +26,10 @@ through `telnetlib3`; the GUI and plots remain on the main thread.
    `1_000_000 / (period_us * 16 * average)` frames/s.
 4. For hardware zero calibration, first equalize measurement/reference pressures
    following the manual, then select **Zero calibrate**. Completion requires READY.
-5. Set a run name, optional notes, and output folder, then **Start & record**.
-6. Select plot channels and history length. Freeze display pauses only the plot.
+5. Open **Run details & storage** to set a run name, optional notes, and output folder.
+   Select **Run & record** in the header from either tab.
+6. Select displayed channels and history length on the scanner tab. Channel selection
+   changes only the graph; all 16 scanner channels are recorded. Freeze display pauses only the plot.
    **Stop** ends acquisition. Closing the app requests STOP and closes files before exit.
 
 Settings are applied before each run using the scanner's variable names and limits.
@@ -103,8 +105,10 @@ configuration UI; it is not imported by the application.
 
 ## Extending the application
 
-The shell provides shared run identity/storage controls and hosts registered device
-workspaces as tabs. Only the pressure scanner is registered; no tunnel-speed or
+The shell provides persistent Run/Stop controls, a run details/storage tab, and
+registered device workspaces as tabs. The scanner graph uses the space previously
+occupied by the always-visible storage form; connection settings sit below acquisition
+settings in the scanner sidebar. Only the pressure scanner is registered; no tunnel-speed or
 force-sensor controls are implemented.
 
 To add a real instrument later:
@@ -112,7 +116,9 @@ To add a real instrument later:
 1. Add a device package under `air_app/devices/` containing its own settings,
    transport/worker, data model, and file schema.
 2. Implement a `DeviceWorkspace` with `request_shutdown()` and
-   `shutdown_complete()`; keep hardware I/O off the GUI thread. The shell waits
+   `shutdown_complete()`, plus `can_start_run()`, `can_stop_run()`, `start_run()`,
+   and `stop_run()`. Emit `controls_changed` when run availability changes. Keep
+   hardware I/O off the GUI thread. The shell waits
    for every workspace to close its connections/files before exiting.
 3. Register its factory and title in `available_devices()`. The factory receives
    the shared `RunStoragePanel` for run name, notes, and folder selection.

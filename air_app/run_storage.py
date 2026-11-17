@@ -55,6 +55,7 @@ class RunStoragePanel(QGroupBox):
         footer.addWidget(self.saved_label, 1)
         footer.addWidget(self.show_button)
         grid.addLayout(footer, 1, 0, 1, 2)
+        grid.setRowStretch(2, 1)
         grid.setColumnStretch(0, 3)
         grid.setColumnStretch(1, 2)
 

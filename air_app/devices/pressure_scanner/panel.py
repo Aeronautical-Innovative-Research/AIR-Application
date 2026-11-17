@@ -75,7 +75,8 @@ class PressureScannerPanel(DeviceWorkspace):
         form = self.form(self.connection_group)
         self.host = QLineEdit(self.preferences.value('host', '191.191.192.176'))
         self.port = self.spin(1, 65535, int(self.preferences.value('port', 23)))
-        self.demo = QCheckBox('Demo • generated signals, no hardware')
+        self.demo = QCheckBox('Demo (no hardware)')
+        self.demo.setToolTip('Use generated signals without connecting to a scanner.')
         form.addRow('Scanner address', self.host)
         form.addRow('TCP port', self.port)
         form.addRow(self.demo)
@@ -85,7 +86,6 @@ class PressureScannerPanel(DeviceWorkspace):
         row.addWidget(self.connect_button)
         row.addWidget(self.disconnect_button)
         form.addRow(row)
-        left.addWidget(self.connection_group)
 
         self.scan_group = QGroupBox('Acquisition settings')
         form = self.form(self.scan_group)
@@ -113,18 +113,11 @@ class PressureScannerPanel(DeviceWorkspace):
         row.addWidget(self.status_button)
         form.addRow(row)
         left.addWidget(self.scan_group)
+        left.addWidget(self.connection_group)
 
         self.name = self.run_storage.name
         self.notes = self.run_storage.notes
         self.folder = self.run_storage.folder
-        self.save_group = QGroupBox('Run controls')
-        form = self.form(self.save_group)
-        self.start_button = self.button('▶  Start & record', self.start_scan)
-        self.stop_button = self.button('■  Stop', self.worker.stop_run.set)
-        row = QHBoxLayout()
-        row.addWidget(self.start_button)
-        row.addWidget(self.stop_button)
-        form.addRow(row)
         self.saved_label = self.run_storage.saved_label
         self.open_button = self.button('Open saved pressure run…', self.open_run)
         left.addWidget(self.open_button)
@@ -134,17 +127,16 @@ class PressureScannerPanel(DeviceWorkspace):
         hint.setWordWrap(True)
         left.addWidget(hint)
         left.addStretch()
-        controls.setMinimumWidth(350)
+        controls.setMinimumWidth(320)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QScrollArea.NoFrame)
         scroll.setWidget(controls)
-        scroll.setMinimumWidth(380)
+        scroll.setMinimumWidth(340)
         sidebar = QWidget()
         sidebar_layout = QVBoxLayout(sidebar)
         sidebar_layout.setContentsMargins(0, 0, 0, 0)
         sidebar_layout.addWidget(scroll, 1)
-        sidebar_layout.addWidget(self.save_group)
         splitter.addWidget(sidebar)
 
         plot_panel = QWidget()
@@ -156,7 +148,9 @@ class PressureScannerPanel(DeviceWorkspace):
         self.ax = self.figure.add_subplot(111)
         right.addWidget(self.canvas, 1)
         self.lines = {}
-        channels = QGridLayout()
+        channel_group = QGroupBox('Displayed channels • all 16 scanner channels are recorded')
+        channel_group.setToolTip('Channel selection changes the graph only; it does not change scanner acquisition or saved data.')
+        channels = QGridLayout(channel_group)
         self.channel_checks = {}
         # Some firmware uses channel 0; retain original identifiers in plots/data.
         for ch in range(17):
@@ -166,7 +160,7 @@ class PressureScannerPanel(DeviceWorkspace):
             self.channel_checks[ch] = check
             channels.addWidget(check, ch // 9, ch % 9)
             self.lines[ch], = self.ax.plot([], [], label=f'Ch {ch}', linewidth=1.3)
-        right.addLayout(channels)
+        right.addWidget(channel_group)
         row = QHBoxLayout()
         self.window_seconds = QDoubleSpinBox()
         self.window_seconds.setRange(1, 3600)
@@ -182,10 +176,12 @@ class PressureScannerPanel(DeviceWorkspace):
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
         self.log.setMaximumBlockCount(500)
-        self.log.setMaximumHeight(150)
+        self.log.setFixedHeight(80)
         right.addWidget(self.log)
         splitter.addWidget(plot_panel)
-        splitter.setSizes([400, 940])
+        splitter.setStretchFactor(0, 0)
+        splitter.setStretchFactor(1, 1)
+        splitter.setSizes([350, 1050])
         self.redraw()
 
     def update_rate(self):
@@ -230,11 +226,23 @@ class PressureScannerPanel(DeviceWorkspace):
         self.scan_group.setEnabled(idle)
         self.calibrate_button.setEnabled(idle and self.is_connected)
         self.status_button.setEnabled(idle and self.is_connected)
-        self.start_button.setEnabled(idle and self.is_connected)
-        self.stop_button.setEnabled(self.busy or self.pending)
         self.open_button.setEnabled(idle)
         self.diagnostics_button.setEnabled(idle and self.is_connected)
         self.run_storage.set_locked(not idle)
+        self.controls_changed.emit()
+
+    def can_start_run(self):
+        return self.is_connected and not self.busy and not self.pending
+
+    def can_stop_run(self):
+        return self.busy or self.pending
+
+    def start_run(self):
+        if self.can_start_run():
+            self.start_scan()
+
+    def stop_run(self):
+        self.worker.stop_run.set()
 
     def calibrate(self):
         if self.demo.isChecked():

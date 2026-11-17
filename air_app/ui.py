@@ -1,6 +1,6 @@
 """Application shell: shared run storage, device workspaces, and shutdown."""
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QTabWidget, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QHBoxLayout, QLabel, QMainWindow, QPushButton, QTabWidget, QVBoxLayout, QWidget
 from .devices.registry import available_devices
 from .run_storage import RunStoragePanel
 
@@ -25,9 +25,24 @@ class MainWindow(QMainWindow):
         layout.setSpacing(12)
         title = QLabel('AIR  /  WIND TUNNEL')
         title.setStyleSheet('font-size: 22px; font-weight: bold; padding: 8px 0;')
-        layout.addWidget(title)
+        header = QHBoxLayout()
+        header.addWidget(title)
+        header.addStretch()
+        self.run_label = QLabel('Run: Untitled')
+        self.run_label.setMaximumWidth(280)
+        header.addWidget(self.run_label)
+        self.start_button = QPushButton('▶  Run && record')
+        self.stop_button = QPushButton('■  Stop')
+        self.start_button.setMinimumWidth(170)
+        self.stop_button.setMinimumWidth(110)
+        self.start_button.clicked.connect(self.start_run)
+        self.stop_button.clicked.connect(self.stop_run)
+        header.addWidget(self.start_button)
+        header.addWidget(self.stop_button)
+        layout.addLayout(header)
         self.run_storage = RunStoragePanel()
-        layout.addWidget(self.run_storage)
+        self.run_storage.name.textChanged.connect(
+            lambda name: self.run_label.setText(f'Run: {name.strip() or "Untitled"}'))
         self.tabs = QTabWidget()
         layout.addWidget(self.tabs, 1)
         self.workspaces = {}
@@ -35,9 +50,30 @@ class MainWindow(QMainWindow):
             workspace = module.create_workspace(self.run_storage)
             self.workspaces[module.key] = workspace
             self.tabs.addTab(workspace, module.title)
+            workspace.controls_changed.connect(self.update_run_controls)
+        self.tabs.addTab(self.run_storage, 'Run details && storage')
+        self.update_run_controls()
         self.shutdown_timer = QTimer(self)
         self.shutdown_timer.setInterval(50)
         self.shutdown_timer.timeout.connect(self.finish_shutdown)
+
+    def update_run_controls(self):
+        active = any(workspace.can_stop_run() for workspace in self.workspaces.values())
+        self.start_button.setEnabled(not active and any(
+            workspace.can_start_run() for workspace in self.workspaces.values()))
+        self.stop_button.setEnabled(active)
+        self.start_button.setToolTip('Record connected devices using the run details and storage settings.')
+
+    def start_run(self):
+        if self.start_button.isEnabled():
+            for workspace in self.workspaces.values():
+                if workspace.can_start_run():
+                    workspace.start_run()
+
+    def stop_run(self):
+        for workspace in self.workspaces.values():
+            if workspace.can_stop_run():
+                workspace.stop_run()
 
     def closeEvent(self, event):
         if all(workspace.shutdown_complete() for workspace in self.workspaces.values()):

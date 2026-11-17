@@ -7,12 +7,27 @@ or frame schema are required of future instruments.
 """
 from dataclasses import dataclass
 from typing import Callable
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget
 from ..run_storage import RunStoragePanel
 
 
 class DeviceWorkspace(QWidget):
     """Lifecycle contract for instrument workspaces hosted by the shell."""
+
+    controls_changed = pyqtSignal()
+
+    def can_start_run(self):
+        return False
+
+    def can_stop_run(self):
+        return False
+
+    def start_run(self):
+        raise NotImplementedError
+
+    def stop_run(self):
+        raise NotImplementedError
 
     def request_shutdown(self):
         raise NotImplementedError
